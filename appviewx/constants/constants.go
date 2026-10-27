@@ -73,6 +73,46 @@ const (
 	CERTIFICATE_CONTENT             = "certificate_content"
 	KEY_CONTENT                     = "key_content"
 
+	// Auto-renewal (appviewx_create_certificate)
+	IS_AUTO_RENEWAL         = "is_auto_renewal"
+	RENEW_BEFORE            = "renew_before"
+	AUTO_REGENERATE_ENABLED = "auto_regenerate_enabled"
+
+	// Wait for issuance (appviewx_create_certificate)
+	WAIT_FOR_ISSUANCE              = "wait_for_issuance"
+	ISSUANCE_TIMEOUT_SECONDS       = "issuance_timeout_seconds"
+	ISSUANCE_POLL_INTERVAL_SECONDS = "issuance_poll_interval_seconds"
+
+	// Revoke on destroy (appviewx_create_certificate)
+	REVOKE_ON_DESTROY = "revoke_on_destroy"
+	REVOKE_REASON     = "revoke_reason"
+	REVOKE_COMMENTS   = "revoke_comments"
+
+	// GCP Certificate Manager push (appviewx_push_gcp_certificate_manager)
+	CERTIFICATE_ID              = "certificate_id"
+	CERTIFICATE_NAME            = "certificate_name"
+	GCP_PROJECT                 = "project"
+	GCP_LOCATION                = "location"
+	GCP_CONNECTOR_NAME          = "gcp_connector_name"
+	IS_NEW_CERTIFICATE          = "is_new_certificate"
+	PUSH_AUTOMATICALLY          = "push_automatically"
+	WAIT_FOR_COMPLETION         = "wait_for_completion"
+	WAIT_TIMEOUT_SECONDS        = "wait_timeout_seconds"
+	POLL_INTERVAL_SECONDS       = "poll_interval_seconds"
+	CERT_MANAGER_CERTIFICATE_ID = "certificate_manager_certificate_id"
+	REQUEST_ID                  = "request_id"
+	CONNECTOR_ID                = "connector_id"
+	STATUS_CODE                 = "status_code"
+	SUCCESS                     = "success"
+
+	// GCP Certificate Manager – Load Balancer binding (cert map / cert map entry)
+	GCP_CERT_MAP_NAME              = "certificate_map_name"
+	GCP_IS_NEW_CERT_MAP            = "is_new_certificate_map"
+	GCP_CERT_MAP_ENTRY_NAME        = "certificate_map_entry_name"
+	GCP_IS_NEW_CERT_MAP_ENTRY      = "is_new_certificate_map_entry"
+	GCP_IS_PRIMARY_CERT_MAP_ENTRY  = "is_primary_certificate_map_entry"
+	GCP_HOSTNAME                   = "hostname"
+
 	REQUEST_DATA                = "request_data"
 	SEQUENCE_NO                 = "sequence_number"
 	SCENARIO                    = "scenario"

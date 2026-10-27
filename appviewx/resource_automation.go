@@ -210,7 +210,7 @@ func resourceAutomationServerCreate(d *schema.ResourceData, m interface{}) error
 	if err != nil {
 		log.Println("\n[ERROR] ❌ Error in reading the response body:")
 		log.Println("   ", err)
-		log.Println("--------------------------------------------------------------\n")
+		log.Println("--------------------------------------------------------------")
 		return err
 	}
 

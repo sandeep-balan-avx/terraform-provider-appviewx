@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"terraform-provider-appviewx/appviewx/config"
 	"terraform-provider-appviewx/appviewx/constants"
@@ -33,81 +34,100 @@ func ResourceCertificateServer() *schema.Resource {
 			constants.COMMON_NAME: &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 			},
 			constants.HASH_FUNCTION: &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 			},
 			constants.KEY_TYPE: &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 			},
 			constants.BIT_LENGTH: &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 			},
 			constants.DNS_NAMES: &schema.Schema{
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
+				ForceNew: true,
 			},
 			constants.CUSTOM_FIELDS: &schema.Schema{
 				Type:     schema.TypeMap,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
+				ForceNew: true,
 			},
 			constants.VENDOR_SPECIFIC_FIELDS: &schema.Schema{
 				Type:     schema.TypeMap,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
+				ForceNew: true,
 			},
 			constants.CERTIFICATE_AUTHORITY: &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 			},
 			constants.CERTIFICATE_GROUP_NAME: &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 			},
 			constants.CA_SETTING_NAME: &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 			},
 			constants.CERTIFICATE_TYPE: &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 			},
 			constants.VALIDITY: &schema.Schema{
 				Type:     schema.TypeInt,
 				Optional: true,
+				ForceNew: true,
 			},
 			constants.VALIDITY_UNIT: &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 			},
 			constants.VALIDITY_UNIT_VALUE: &schema.Schema{
 				Type:     schema.TypeInt,
 				Optional: true,
+				ForceNew: true,
 			},
 			constants.IS_SYNC: &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
+				ForceNew: true,
 			},
 			constants.CERTIFICATE_DOWNLOAD_PATH: &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 			},
 			constants.CERTIFICATE_DOWNLOAD_FORMAT: &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 			},
 			constants.CERTIFICATE_DOWNLOAD_PASSWORD: &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 			},
 			constants.CERTIFICATE_CHAIN_REQUIRED: &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
+				ForceNew: true,
 			},
 			constants.RESOURCE_ID: &schema.Schema{
 				Type:     schema.TypeString,
@@ -116,18 +136,22 @@ func ResourceCertificateServer() *schema.Resource {
 			constants.KEY_DOWNLOAD_PATH: &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 			},
 			constants.KEY_DOWNLOAD_PASSWORD: &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 			},
 			constants.DOWNLOAD_PASSWORD_PROTECTED_KEY: &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
+				ForceNew: true,
 			},
 			constants.STORE_CERTIFICATE_IN_STATE: &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
+				ForceNew: true,
 				Default:  false,
 			},
 			constants.CERTIFICATE_CONTENT: &schema.Schema{
@@ -138,6 +162,66 @@ func ResourceCertificateServer() *schema.Resource {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
+			},
+			constants.IS_AUTO_RENEWAL: &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+				Default:  false,
+			},
+			constants.RENEW_BEFORE: &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			constants.AUTO_REGENERATE_ENABLED: &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+				Default:  false,
+			},
+			constants.WAIT_FOR_ISSUANCE: &schema.Schema{
+				Type:        schema.TypeBool,
+				Optional:    true,
+				ForceNew:    true,
+				Default:     false,
+				Description: "Block until the certificate is issued (polls the create request). Recommended when a dependent resource pushes the certificate in the same apply.",
+			},
+			constants.ISSUANCE_TIMEOUT_SECONDS: &schema.Schema{
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      600,
+				ValidateFunc: validation.IntAtLeast(1),
+			},
+			constants.ISSUANCE_POLL_INTERVAL_SECONDS: &schema.Schema{
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      10,
+				ValidateFunc: validation.IntAtLeast(1),
+			},
+			constants.REVOKE_ON_DESTROY: &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			constants.REVOKE_REASON: &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "Cessation of operation",
+				ValidateFunc: validation.StringInSlice([]string{
+					"Unspecified",
+					"Key compromise",
+					"CA compromise",
+					"Affiliation Changed",
+					"Superseded",
+					"Cessation of operation",
+				}, false),
+			},
+			constants.REVOKE_COMMENTS: &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 		},
 		Importer: &schema.ResourceImporter{
@@ -164,15 +248,105 @@ func resourceCertificateServerRead(d *schema.ResourceData, m interface{}) error 
 }
 
 func resourceCertificateServerUpdate(resourceData *schema.ResourceData, m interface{}) error {
-	log.Println("[INFO]  **************** UPDATE OPERATION NOT SUPPORTED FOR THIS RESOURCE **************** ")
-	//Update implementation is empty since this resource is for the stateless generic api invocation
-	return errors.New("Update not supported")
+	// Every attribute that shapes the issued certificate is ForceNew, so changing
+	// any of those triggers a destroy+create instead of an update. The only
+	// attributes that reach this function are the destroy-time knobs
+	// (revoke_on_destroy, revoke_reason, revoke_comments), which take effect on
+	// Delete and must not re-issue the certificate. Persist them into state by
+	// returning nil (the SDK writes the new values automatically).
+	log.Println("[INFO]  **************** UPDATE OPERATION (revoke-on-destroy settings only) **************** ")
+	return nil
 }
 
 func resourceCertificateServerDelete(d *schema.ResourceData, m interface{}) error {
-	log.Println("[INFO]  **************** DELETE OPERATION NOT SUPPORTED FOR THIS RESOURCE **************** ")
-	// Delete implementation is empty since this resoruce is for the stateless generic api invocation
+	log.Println("[INFO]  **************** DELETE OPERATION FOR CERTIFICATE **************** ")
+	if d.Get(constants.REVOKE_ON_DESTROY).(bool) {
+		if err := revokeCertificateOnDestroy(d, m); err != nil {
+			// Match the codebase convention for revoke-on-destroy: don't fail the
+			// destroy on a revoke error (e.g. the certificate is already expired,
+			// revoked, or deleted in AppViewX). Log and continue so Terraform state
+			// is still cleaned up rather than leaving the user with a stuck destroy.
+			log.Println("[WARN] Certificate revoke on destroy failed; continuing with destroy: ", err)
+		}
+	}
 	d.SetId("")
+	return nil
+}
+
+func buildRevokePayload(resourceID, reason, comments string) map[string]interface{} {
+	payload := map[string]interface{}{
+		"resourceId": resourceID,
+		"reason":     reason,
+	}
+	if comments != "" {
+		payload["comments"] = comments
+	}
+	return payload
+}
+
+func revokeCertificateOnDestroy(d *schema.ResourceData, m interface{}) error {
+	configAppViewXEnvironment := m.(*config.AppViewXEnvironment)
+	appviewxEnvironmentIP := configAppViewXEnvironment.AppViewXEnvironmentIP
+	appviewxEnvironmentPort := configAppViewXEnvironment.AppViewXEnvironmentPort
+	appviewxEnvironmentIsHTTPS := configAppViewXEnvironment.AppViewXIsHTTPS
+
+	var appviewxSessionID, accessToken string
+	var err error
+	if configAppViewXEnvironment.AppViewXUserName != "" && configAppViewXEnvironment.AppViewXPassword != "" {
+		appviewxSessionID, err = GetSession(configAppViewXEnvironment.AppViewXUserName, configAppViewXEnvironment.AppViewXPassword, appviewxEnvironmentIP, appviewxEnvironmentPort, "WEB", appviewxEnvironmentIsHTTPS)
+		if err != nil {
+			return err
+		}
+	} else if configAppViewXEnvironment.AppViewXClientId != "" && configAppViewXEnvironment.AppViewXClientSecret != "" {
+		accessToken, err = GetAccessTokenWithRotation(configAppViewXEnvironment, "WEB")
+		if err != nil {
+			return err
+		}
+	}
+	if appviewxSessionID == "" && accessToken == "" {
+		return errors.New("authentication failed - cannot revoke certificate on destroy")
+	}
+
+	resourceID := d.Get(constants.RESOURCE_ID).(string)
+	if resourceID == "" {
+		log.Println("[WARN] No resource_id in state; skipping revoke on destroy")
+		return nil
+	}
+	reason := d.Get(constants.REVOKE_REASON).(string)
+	comments := d.Get(constants.REVOKE_COMMENTS).(string)
+
+	payload := buildRevokePayload(resourceID, reason, comments)
+	requestBody, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
+	queryParams := map[string]string{constants.GW_SOURCE: "external"}
+	url := GetURL(appviewxEnvironmentIP, appviewxEnvironmentPort, "certificate/revoke", queryParams, appviewxEnvironmentIsHTTPS)
+
+	client := &http.Client{Transport: HTTPTransport()}
+	req, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer(requestBody))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+	if appviewxSessionID != "" {
+		req.Header.Set(constants.SESSION_ID, appviewxSessionID)
+	} else {
+		req.Header.Set(constants.TOKEN, accessToken)
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	body, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return fmt.Errorf("certificate revoke failed with status %d: %s", resp.StatusCode, string(body))
+	}
+	log.Println("[INFO] Certificate revoke on destroy submitted: ", string(body))
 	return nil
 }
 
@@ -220,6 +394,22 @@ func resourceCertificateServerCreate(resourceData *schema.ResourceData, m interf
 	resourceData.SetId(resourceID)
 	log.Println("[INFO] resource_id data is set in payload")
 
+	// Optionally block until the certificate is actually issued. Create is async
+	// (returns 202 as soon as the request is submitted), so a dependent resource -
+	// e.g. appviewx_push_gcp_certificate_manager - can otherwise race ahead of
+	// issuance and fail to push. Poll the create requestId to completion first.
+	if resourceData.Get(constants.WAIT_FOR_ISSUANCE).(bool) {
+		requestID := result.Response["requestId"]
+		if requestID == "" {
+			return errors.New("[ERROR] wait_for_issuance is set but the certificate create response did not include a requestId")
+		}
+		issuanceTimeout := resourceData.Get(constants.ISSUANCE_TIMEOUT_SECONDS).(int)
+		issuancePoll := resourceData.Get(constants.ISSUANCE_POLL_INTERVAL_SECONDS).(int)
+		if err := waitForRequestCompletion(configAppViewXEnvironment, appviewxSessionID, accessToken, "WEB", requestID, "certificate issuance", issuanceTimeout, issuancePoll); err != nil {
+			return err
+		}
+	}
+
 	if resourceData.Get(constants.IS_SYNC) == nil || !resourceData.Get(constants.IS_SYNC).(bool) {
 		log.Println("[INFO] Certificate is created in ASYNC mode so download can be done once the certificate is issued.")
 		log.Println("[INFO] ***** Use this resource ID to download the certificate", resourceID)
@@ -247,7 +437,7 @@ func downloadCertificate(resourceData *schema.ResourceData, resourceID string, a
 	commonName := resourceData.Get(constants.COMMON_NAME).(string)
 
 	downloadFormat := GetDownloadFormat(resourceData)
-	
+
 	// Only compute download path if we're writing to files
 	var downloadPath string
 	var err error
@@ -258,7 +448,7 @@ func downloadCertificate(resourceData *schema.ResourceData, resourceID string, a
 			return err
 		}
 	}
-	
+
 	if downloadPassword, ok = GetDownloadPassword(resourceData, downloadFormat, configAppViewXEnvironment); !ok {
 		return errors.New("[ERROR] Error in getting the download password")
 	}
@@ -463,7 +653,7 @@ func GetAccessTokenWithRotation(configEnv *config.AppViewXEnvironment, gwSource 
 		strings.Contains(err.Error(), "HTTP 403")
 	isExpiredError := strings.Contains(strings.ToLower(err.Error()), "expired") ||
 		strings.Contains(err.Error(), "unauthorized")
-	
+
 	// If it's NOT an auth/expiry error, return immediately without attempting regeneration
 	if !isAuthError && !isExpiredError {
 		return "", err
@@ -634,6 +824,14 @@ func frameCertificatePayload(resourceData *schema.ResourceData) config.CreateCer
 			vendorFields[key] = values.(string)
 		}
 		payload.CaConnectorInfo.VendorSpecificfields = vendorFields
+	}
+	if resourceData.Get(constants.IS_AUTO_RENEWAL).(bool) {
+		payload.CaConnectorInfo.IsAutoRenewal = "true"
+		if v, ok := resourceData.GetOk(constants.RENEW_BEFORE); ok {
+			payload.CaConnectorInfo.RenewBefore = v.(string)
+		}
+		autoRegen := resourceData.Get(constants.AUTO_REGENERATE_ENABLED).(bool)
+		payload.CaConnectorInfo.AutoRegenerateEnabled = &autoRegen
 	}
 	return payload
 }

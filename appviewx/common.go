@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -86,15 +85,16 @@ func GetSession(
 		return "", err
 	}
 	log.Println("[INFO] Response status code : ", resp.Status)
+	defer resp.Body.Close()
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		responseBody, err := io.ReadAll(resp.Body)
-		if err == nil {
+		responseBody, readErr := io.ReadAll(resp.Body)
+		if readErr == nil {
 			log.Println("[ERROR] Response obtained : ", string(responseBody))
 			return "", errors.New("error in getting the session id due to " + string(responseBody))
 		}
+		return "", errors.New("error in getting the session id, status: " + resp.Status)
 	}
-	defer resp.Body.Close()
-	responseContents, err := ioutil.ReadAll(resp.Body)
+	responseContents, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Println("[ERROR] error in reading the response body", err)
 		return "", err
@@ -141,13 +141,13 @@ func GetDownloadFilePath(resourceData *schema.ResourceData, commonName, download
 	} else {
 		downloadPath := resourceData.Get(constants.CERTIFICATE_DOWNLOAD_PATH).(string)
 		log.Println("[INFO] Download path provided = ", downloadPath)
-		
+
 		// Validate that the target directory exists and is accessible
 		parentDir := filepath.Dir(downloadPath)
 		if parentDir == "" || parentDir == "." {
 			parentDir = workingDir
 		}
-		
+
 		fileInfo, err := os.Stat(parentDir)
 		if err != nil {
 			if os.IsNotExist(err) {
@@ -159,14 +159,14 @@ func GetDownloadFilePath(resourceData *schema.ResourceData, commonName, download
 			log.Println("[ERROR] Cannot access directory: " + parentDir + " (error: " + err.Error() + ")")
 			return "", errors.New("cannot access directory: " + parentDir + " (error: " + err.Error() + ")")
 		}
-		
+
 		if !fileInfo.IsDir() {
 			log.Println("[ERROR] Path is not a directory: " + parentDir)
 			return "", errors.New("path is not a directory: " + parentDir)
 		}
-		
+
 		// Path exists and is a valid directory - return full file path
-		fullPath := filepath.Join(parentDir, commonName + "." + strings.ToLower(downloadFormat))
+		fullPath := filepath.Join(parentDir, commonName+"."+strings.ToLower(downloadFormat))
 		log.Println("[INFO] Certificate will be saved to: " + fullPath)
 		return fullPath, nil
 	}
@@ -180,13 +180,13 @@ func GetDownloadFilePathForKey(resourceData *schema.ResourceData, commonName, do
 	} else {
 		downloadPath := resourceData.Get(constants.KEY_DOWNLOAD_PATH).(string)
 		log.Println("[INFO] Download path provided = ", downloadPath)
-		
+
 		// Validate that the target directory exists and is accessible
 		parentDir := filepath.Dir(downloadPath)
 		if parentDir == "" || parentDir == "." {
 			parentDir = workingDir
 		}
-		
+
 		fileInfo, err := os.Stat(parentDir)
 		if err != nil {
 			if os.IsNotExist(err) {
@@ -198,14 +198,14 @@ func GetDownloadFilePathForKey(resourceData *schema.ResourceData, commonName, do
 			log.Println("[ERROR] Cannot access directory: " + parentDir + " (error: " + err.Error() + ")")
 			return "", errors.New("cannot access directory: " + parentDir + " (error: " + err.Error() + ")")
 		}
-		
+
 		if !fileInfo.IsDir() {
 			log.Println("[ERROR] Path is not a directory: " + parentDir)
 			return "", errors.New("path is not a directory: " + parentDir)
 		}
-		
+
 		// Path exists and is a valid directory - return full file path
-		fullPath := filepath.Join(parentDir, commonName + "." + strings.ToLower(downloadFormat))
+		fullPath := filepath.Join(parentDir, commonName+"."+strings.ToLower(downloadFormat))
 		log.Println("[INFO] Private key will be saved to: " + fullPath)
 		return fullPath, nil
 	}
@@ -319,7 +319,7 @@ func downloadCertificateFromAppviewx(appviewxResourceId, commonName, serialNumbe
 		log.Println("[ERROR] ", err)
 		return false
 	} else {
-		err = os.WriteFile(downloadPath, responseByte, 0777)
+		err = os.WriteFile(downloadPath, responseByte, 0600)
 		if err != nil {
 			log.Println("[ERROR] Failed to write certificate file: " + err.Error())
 			log.Println("[ERROR] Cannot write to path: " + downloadPath)
@@ -335,7 +335,7 @@ func downloadCertificateFromAppviewx(appviewxResourceId, commonName, serialNumbe
 
 func downloadKey(resourceData *schema.ResourceData, resourceID, appviewxSessionID, accessToken string, configAppViewXEnvironment *config.AppViewXEnvironment, storeInState bool) error {
 	commonName := resourceData.Get(constants.COMMON_NAME).(string)
-	
+
 	// Only compute download path if we're writing to files
 	var downloadPath string
 	var err error
@@ -346,7 +346,7 @@ func downloadKey(resourceData *schema.ResourceData, resourceID, appviewxSessionI
 			return err
 		}
 	}
-	
+
 	providerKeyPassword := configAppViewXEnvironment.ProviderKeyDownloadPassword
 	resourceKeyPassword := resourceData.Get(constants.KEY_DOWNLOAD_PASSWORD).(string)
 	downloadPassword := getPasswordWithPriority(providerKeyPassword, resourceKeyPassword)
@@ -358,13 +358,14 @@ func downloadKey(resourceData *schema.ResourceData, resourceID, appviewxSessionI
 	}
 
 	searchResponse := searchCertificate(resourceID, appviewxSessionID, accessToken, configAppViewXEnvironment)
-	if searchResponse.AppviewxResponse.ResponseObject.Objects != nil && searchResponse.AppviewxResponse.ResponseObject.Objects[0].UUID == "" {
+	objects := searchResponse.AppviewxResponse.ResponseObject.Objects
+	if len(objects) == 0 || objects[0].UUID == "" {
 		log.Println("[ERROR] Cannot find the UUID for the resource id " + resourceID + " to proceed with key download")
 		return errors.New("[ERROR] Certificate details was not found to download the private key")
 	}
-	uuid := searchResponse.AppviewxResponse.ResponseObject.Objects[0].UUID
+	uuid := objects[0].UUID
 	log.Println("[INFO] UUID for the resource id " + resourceID + " was obtained successfully")
-	
+
 	// Handle key download based on storeInState flag
 	if storeInState {
 		// Fetch key content and store in state
@@ -478,18 +479,18 @@ func decryptPasswordProtectedKeyAndDownloadKey(encryptedPrivateKey, password str
 	}
 
 	log.Println("[INFO] Decrypting the password protected private key file content")
-	tempFile := filepath.Join(os.TempDir(), "temp_private_key.pem")
 	var file *os.File
 	var err error
-	file, err = os.Create(tempFile)
+	file, err = os.CreateTemp("", "appviewx_enc_key_*.pem")
 	if err != nil {
 		log.Println("[ERROR] Error creating temp file: " + err.Error())
 		return errors.New("cannot create temporary file for key decryption: " + err.Error())
 	}
-	defer file.Close()
+	tempFile := file.Name()
 	defer os.Remove(tempFile)
 
 	_, err = file.WriteString(encryptedPrivateKey)
+	file.Close() // flush before openssl reads it
 	if err != nil {
 		log.Println("[ERROR] Error writing to temp file: " + err.Error())
 		return errors.New("error preparing key for decryption: " + err.Error())
@@ -514,7 +515,7 @@ func writeKeyToFile(downloadPath string, fileContent []byte) error {
 		return errors.New("invalid key file path: " + err.Error())
 	}
 
-	if err := os.WriteFile(downloadPath, fileContent, 0777); err != nil {
+	if err := os.WriteFile(downloadPath, fileContent, 0600); err != nil {
 		log.Println("[ERROR] Failed to write key file: " + err.Error())
 		log.Println("[ERROR] Cannot write to path: " + downloadPath)
 		log.Println("[ERROR] Check file permissions and directory access")
@@ -736,25 +737,31 @@ func downloadKeyContentFromAppviewx(uuid, downloadPassword string, downloadPassw
 // decryptPasswordProtectedKey decrypts a password-protected key and returns the decrypted content as string
 func decryptPasswordProtectedKey(encryptedPrivateKey, password string) (string, error) {
 	log.Println("[INFO] Decrypting the password protected private key content")
-	tempFile := filepath.Join(os.TempDir(), "temp_private_key.pem")
 	var file *os.File
 	var err error
-	file, err = os.Create(tempFile)
+	file, err = os.CreateTemp("", "appviewx_enc_key_*.pem")
 	if err != nil {
-		fmt.Println("Error creating temp file:", err)
+		log.Println("[ERROR] Error creating temp file:", err)
 		return "", errors.New("error while decrypting the private key content")
 	}
-	defer file.Close()
+	tempFile := file.Name()
 	defer os.Remove(tempFile)
 
 	_, err = file.WriteString(encryptedPrivateKey)
+	file.Close() // flush before openssl reads it
 	if err != nil {
-		fmt.Println("Error writing to file:", err)
+		log.Println("[ERROR] Error writing to temp file:", err)
 		return "", errors.New("error while decrypting the private key content")
 	}
 
-	// Create a temporary output file for the decrypted key
-	decryptedFile := filepath.Join(os.TempDir(), "decrypted_private_key.pem")
+	// Create a unique temporary output file for the decrypted key.
+	decryptedF, err := os.CreateTemp("", "appviewx_dec_key_*.pem")
+	if err != nil {
+		log.Println("[ERROR] Error creating decrypted temp file:", err)
+		return "", errors.New("error while decrypting the private key content")
+	}
+	decryptedFile := decryptedF.Name()
+	decryptedF.Close()
 	defer os.Remove(decryptedFile)
 
 	cmd := exec.Command("openssl", "pkey", "-in", tempFile, "-out", decryptedFile, "-passin", "pass:"+password)
