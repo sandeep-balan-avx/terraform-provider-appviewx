@@ -56,9 +56,9 @@ func Provider() *schema.Provider {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "INFO",
-				Description: "Log level (DEBUG, INFO)",
+				Description: "Log level (DEBUG, INFO, WARN, ERROR)",
 				ValidateFunc: validation.StringInSlice([]string{
-					"DEBUG", "INFO",
+					"DEBUG", "INFO", "WARN", "ERROR",
 				}, false),
 			},
 			constants.CERTIFICATE_DOWNLOAD_PASSWORD: {
@@ -89,6 +89,7 @@ func Provider() *schema.Provider {
 			"appviewx_search_certificate":                     ResourceSearchCertificateByKeyword(),
 			"appviewx_revoke_certificate":                     ResourceRevokeCertificate(),
 			"appviewx_certificate_push_akv":                   ResourceCertificatePushAKV(),
+			"appviewx_push_gcp_certificate_manager":           ResourcePushGCPCertificateManager(),
 			"appviewx_create_push_certificate_request_status": CreatePushCertificateRequestStatus(),
 			"appviewx_revoke_certificate_request_status":      RevokeCertificateRequestStatus(),
 		},
