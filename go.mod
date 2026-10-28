@@ -1,6 +1,6 @@
 module terraform-provider-appviewx
 
-go 1.27
+go 1.27.3
 
 require github.com/hashicorp/terraform-plugin-sdk/v2 v2.23.0
 

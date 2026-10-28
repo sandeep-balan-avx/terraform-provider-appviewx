@@ -10,9 +10,9 @@ import (
 )
 
 var (
-	version     = "1.1.2"
-	releaseDate = "Sep, 2026"
-	description = "Certificate/Key State Storage for Certificate Create Resource (Synchronous Mode)"
+	version     = "1.1.3"
+	releaseDate = "Oct, 2026"
+	description = "Upgraded Go from version 1.27 to 1.27.3 to address security vulnerabilities."
 )
 
 func init() {
