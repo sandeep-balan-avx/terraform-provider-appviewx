@@ -223,6 +223,20 @@ func ResourceCertificateServer() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			constants.STORE_CERTIFICATE_IN_STATE: &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			constants.CERTIFICATE_CONTENT: &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			constants.KEY_CONTENT: &schema.Schema{
+				Type:      schema.TypeString,
+				Computed:  true,
+				Sensitive: true,
+			},
 		},
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceCertificateImport,
